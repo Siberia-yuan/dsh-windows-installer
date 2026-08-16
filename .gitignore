@@ -1,0 +1,4 @@
+# 安装器运行产物（下载的 git/node/pnpm 缓存、日志）不入库
+tools/
+install.log
+install-run.log

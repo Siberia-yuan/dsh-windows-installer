@@ -152,7 +152,7 @@ pushd "%TARGET%"
 echo   updating existing repo (git pull --ff-only) ...
 call :log "git pull ff-only"
 git pull --ff-only
-if errorlevel 1 ( echo   [WARN] git pull failed (probably local patch changes) - leaving existing checkout untouched. & call :log "git pull failed - kept existing checkout" )
+if errorlevel 1 ( echo   [WARN] git pull failed ^(probably local patch changes^) - leaving existing checkout untouched. & call :log "git pull failed - kept existing checkout" )
 popd
 goto :after_clone
 :clone_failed
@@ -254,7 +254,7 @@ if defined DRY ( echo   [dry-run] copy dsh.ico + create Desktop\DeepSeek Harness
 rem optional icon: if a dsh.ico sits next to this installer, copy it over
 rem (the icon is a separate resource file; without it the shortcut uses the
 rem default Windows icon - install still works fine)
-if exist "%~dp0dsh.ico" ( copy /y "%~dp0dsh.ico" "%TARGET%\dsh.ico" >nul & echo   [ok] icon copied (dsh.ico). ) else ( echo   [info] dsh.ico not found next to installer - shortcut uses a default icon. )
+if exist "%~dp0dsh.ico" ( copy /y "%~dp0dsh.ico" "%TARGET%\dsh.ico" >nul & echo   [ok] icon copied ^(dsh.ico^). ) else ( echo   [info] dsh.ico not found next to installer - shortcut uses a default icon. )
 rem resolve the real desktop path (works with OneDrive-redirected desktops too)
 for /f "delims=" %%d in ('powershell -NoProfile -ExecutionPolicy Bypass -Command "[Environment]::GetFolderPath('Desktop')"') do set "DESKTOP=%%d"
 if not defined DESKTOP set "DESKTOP=%USERPROFILE%\Desktop"
@@ -341,7 +341,7 @@ rem ============================================================== git tool
   echo [%date% %time%] downloading bundled PortableGit (~59 MB) >> "%LOG_FILE%"
   if not exist "%TOOLS_DIR%" mkdir "%TOOLS_DIR%"
   powershell -NoProfile -ExecutionPolicy Bypass -Command "$ProgressPreference='SilentlyContinue'; $ErrorActionPreference='Stop'; $u='%GIT_URL%'; Invoke-WebRequest $u -OutFile '%GIT_SFX%'" >nul 2>nul
-  if not exist "%GIT_SFX%" ( echo   [FAIL] could not download PortableGit (network?). & exit /b 1 )
+  if not exist "%GIT_SFX%" ( echo   [FAIL] could not download PortableGit ^(network?^). & exit /b 1 )
   echo   extracting PortableGit ...
   "%GIT_SFX%" -y -o"%LOCAL_GIT%" >nul 2>nul
   del /q "%GIT_SFX%" 2>nul
@@ -383,14 +383,20 @@ rem ============================================================= node tool
   exit /b 1
 
 :ensure_pnpm
-  where pnpm >nul 2>&1
-  if not errorlevel 1 ( set "PNPM_BIN=pnpm" & exit /b 0 )
-  rem corepack ships with Node; find the node dir and enable the pnpm shim
+  rem Prefer a standalone pnpm installed into tools\pnpm-global: corepack
+  rem shims on PATH break inside the target repo's node_modules with
+  rem "Cannot find module ...node_modules\corepack\dist\pnpm.js".
+  set "PNPM_GLOBAL=%TOOLS_DIR%\pnpm-global"
+  if exist "%PNPM_GLOBAL%\pnpm.cmd" ( set "PNPM_BIN=%PNPM_GLOBAL%\pnpm.cmd" & echo   [ok] using bundled pnpm - already installed, no download needed. & exit /b 0 )
   for /f "delims=" %%d in ('where node 2^>nul') do set "NODE_DIR=%%~dpd"
-  if defined NODE_DIR ( set "PATH=!NODE_DIR!;!PATH!" & call "!NODE_DIR!corepack.cmd" enable >nul 2>nul )
+  if not defined NODE_DIR ( echo   [FAIL] node not found. Install Node 22 LTS and retry. & exit /b 1 )
+  echo   [info] installing pnpm 11 into tools\pnpm-global (one-time, via bundled npm) ...
+  call "%NODE_BIN%" "%NODE_DIR%node_modules\npm\bin\npm-cli.js" install -g pnpm@11.7.0 --prefix "%PNPM_GLOBAL%" --registry=https://registry.npmmirror.com >nul 2>nul
+  if exist "%PNPM_GLOBAL%\pnpm.cmd" ( set "PNPM_BIN=%PNPM_GLOBAL%\pnpm.cmd" & echo   [ok] bundled pnpm ready. & exit /b 0 )
+  rem fallback: try a pnpm already on PATH
   where pnpm >nul 2>&1
-  if not errorlevel 1 ( set "PNPM_BIN=pnpm" & exit /b 0 )
-  echo   [FAIL] pnpm could not be enabled. Install Node 22 LTS (ships corepack) and retry.
+  if not errorlevel 1 ( set "PNPM_BIN=pnpm" & echo   [info] using system pnpm. & exit /b 0 )
+  echo   [FAIL] could not set up pnpm. Install Node 22 LTS and retry.
   exit /b 1
 
 :echo_step
