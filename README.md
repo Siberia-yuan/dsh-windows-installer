@@ -83,6 +83,7 @@ installer\install-dsh.cmd --force-download
 dsh-windows-installer/
 ├── README.md              ← 本文件
 ├── LICENSE                ← MIT 开源协议
+├── dsh.ico                ← 桌面快捷方式图标（独立资源，官方鲸鱼 logo）
 ├── install-dsh.cmd        ← ★ 单文件版：双击即用，全部逻辑内联（推荐）
 └── installer/             ← 分体版（逻辑等价，文件更小，便于逐文件审计）
     ├── install-dsh.cmd     ← 一键安装主脚本（入口）
@@ -94,6 +95,8 @@ dsh-windows-installer/
     ├── INSTALL.md          ← 完整安装与安全审计文档（建议先读）
     └── index.html          ← 可视化安装向导（离线可用）
 ```
+
+> 💡 **图标说明**：`dsh.ico` 是独立的资源文件（非内嵌）。单文件版安装器会自动检测旁边的 `dsh.ico` 并用于桌面快捷方式；如果只拷贝 `install-dsh.cmd` 而不带图标，快捷方式会使用系统默认图标，**安装功能不受任何影响**。
 
 ## 工作原理（安装器执行的步骤）
 
