@@ -10,6 +10,24 @@
 
 > 想先看它会执行什么？运行 `install-dsh.cmd --dry-run`（只预览，不做任何改动）。
 
+## 安装到使用，就这三步
+
+下面的截图来自我自己在电脑上手动装的一次，不是演示图，是真实的过程。
+
+**1. 双击 `install-dsh.cmd`，等它跑完，看到 INSTALL SUCCESS 就是装好了**
+
+![安装成功](docs/screenshots/install-success.png)
+
+**2. 桌面上多了一个 DeepSeek Harness 图标**
+
+![桌面图标](docs/screenshots/desktop-icon.png)
+
+**3. 双击这个图标，它会启动服务器，然后浏览器打开 http://127.0.0.1:3080 就能用 dsh 了**
+
+![启动服务器](docs/screenshots/launch-server.png)
+
+整个过程不用装别的软件，也不用碰命令行——双击、等、再双击，就这三下。
+
 ## 首次运行提示（SmartScreen / 未知发布者）
 
 从网上下载的未签名脚本，Windows 默认会弹出「来自没有验证的发行者」或「Windows 已保护你的电脑」——**这是对任何未签名脚本的常规提醒，不代表脚本有问题**（纯文本 `.cmd` 无法做代码签名，所有开源脚本都一样）。解除方式：
