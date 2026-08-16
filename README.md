@@ -75,21 +75,6 @@ dsh-windows-installer/
 
 > 💡 **图标说明**：`dsh.ico` 是独立的资源文件（非内嵌）。单文件版安装器会自动检测旁边的 `dsh.ico` 并用于桌面快捷方式；如果只拷贝 `install-dsh.cmd` 而不带图标，快捷方式会使用系统默认图标，**安装功能不受任何影响**。
 
-## 工作原理（安装器执行的步骤）
-
-| 步骤 | 做什么 | 为什么 |
-|---|---|---|
-| 0 | 检测/准备 git、Node.js（缺失或版本不足自动下载自包含副本） | 零预装；Node ≥ 22.19 满足官方仓库 engines 要求 |
-| 1 | 确定安装目录（默认 `%USERPROFILE%\deepseek-harness`） | 所有写入都局限在此，这是安全边界 |
-| 2 | 克隆官方源码（默认走 `ghfast.top` 国内镜像，失败回退直连） | 安装的是**官方仓库**，不是修改版 |
-| 3 | 运行 `patch-windows.mjs` 打兼容补丁 | 解决 Windows + pnpm 11 的已知问题（hoisted 链接、koffi 构建等） |
-| 4 | `pnpm install` 安装依赖 | 使用 npmmirror 镜像加速 |
-| 5 | 创建 workspace junction | pnpm hoisted 模式不自动建，用 junction（免管理员）补齐 |
-| 6 | 构建（tsc + tsdown + vite） | 产出可运行的 lib 与 Web UI |
-| 7 | 生成智能启动器 `start-dsh.cmd` | 已在运行→直接开网页；未运行→启动+开网页 |
-| 8 | 创建桌面快捷方式 + 图标（固定环节） | 像普通桌面软件一样双击即用 |
-| 9 | 打印安装位置与启动方式 | 收尾 |
-
 ## 安全模型（3 步审计）
 
 1. **读代码**：用记事本打开 `installer\` 下所有脚本，都很短，逐行可读
