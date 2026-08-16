@@ -223,13 +223,15 @@ if exist "%~dp0dsh.ico" (
 rem resolve the real desktop path (works with OneDrive-redirected desktops too)
 for /f "delims=" %%d in ('powershell -NoProfile -ExecutionPolicy Bypass -Command "[Environment]::GetFolderPath('Desktop')"') do set "DESKTOP=%%d"
 if not defined DESKTOP set "DESKTOP=%USERPROFILE%\Desktop"
-echo   creating desktop shortcut (Windows built-in) ...
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$ws=New-Object -ComObject WScript.Shell; $d=$ws.SpecialFolders('Desktop'); $s=$ws.CreateShortcut($d+'\DeepSeek Harness.lnk'); $s.TargetPath='%TARGET%\start-dsh.cmd'; $s.WorkingDirectory='%TARGET%'; if(Test-Path '%TARGET%\dsh.ico'){ $s.IconLocation='%TARGET%\dsh.ico,0' }; $s.Description='DeepSeek Harness Web UI (http://127.0.0.1:3080)'; $s.Save()" >nul 2>&1
-if exist "%DESKTOP%\DeepSeek Harness.lnk" goto :shortcut_ok
-echo   [WARN] shortcut creation failed - install is still complete (run start-dsh.cmd to launch).
-goto :after_shortcut
-:shortcut_ok
-echo   [ok] shortcut created on your desktop.
+echo   desktop: !DESKTOP!
+echo   creating shortcut "DeepSeek Harness.lnk" ...
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$d='%DESKTOP%'; $s=(New-Object -ComObject WScript.Shell).CreateShortcut($d+'\DeepSeek Harness.lnk'); $s.TargetPath='%TARGET%\start-dsh.cmd'; $s.WorkingDirectory='%TARGET%'; if(Test-Path '%TARGET%\dsh.ico'){ $s.IconLocation='%TARGET%\dsh.ico,0' }; $s.Description='DeepSeek Harness Web UI (http://127.0.0.1:3080)'; $s.Save()"
+if errorlevel 1 echo   [WARN] PowerShell reported an error creating the shortcut (see message above).
+if exist "%DESKTOP%\DeepSeek Harness.lnk" (
+  echo   [ok] shortcut created: "%DESKTOP%\DeepSeek Harness.lnk"
+) else (
+  echo   [WARN] shortcut file not found - install is still complete ^(run "%TARGET%\start-dsh.cmd" to launch^).
+)
 :after_shortcut
 
 rem -------------------------------------------------------------- summary
@@ -425,6 +427,10 @@ rem ============================================================= node tool
   echo.
   echo   [FAIL] Installer aborted. Nothing was left half-done that can't be
   echo          cleaned by deleting the target directory.
+  echo          Note: the desktop shortcut was NOT created because the
+  echo          install did not complete. Check the messages above for the
+  echo          cause (most common: network / proxy issues during clone or
+  echo          pnpm install - just re-run the installer to retry).
   exit /b 1
 
 :done
