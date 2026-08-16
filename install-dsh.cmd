@@ -88,17 +88,10 @@ echo [%date% %time%] DeepSeek Harness installer started > "%LOG_FILE%" 2>nul
 
 rem ---- detect CPU architecture and pick matching tool builds ----
 set "ARCH=x64"
-if /i "%PROCESSOR_ARCHITECTURE%"=="x86" if defined PROCESSOR_ARCHITEW6432 set "PROCESSOR_ARCHITECTURE=%PROCESSOR_ARCHITEW6432%"
+if /i "%PROCESSOR_ARCHITECTURE%"=="x86" if defined PROCESSOR_ARCHITEW6432 set "PROCESSOR_ARCHITECTURE=!PROCESSOR_ARCHITEW6432!"
 if /i "%PROCESSOR_ARCHITECTURE%"=="AMD64" set "ARCH=x64"
 if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "ARCH=arm64"
-if /i not "%ARCH%"=="x64" if /i not "%ARCH%"=="arm64" (
-  echo.
-  echo   [FAIL] 32-bit Windows is not supported by this installer.
-  echo          Please use 64-bit (x64 / ARM64) Windows 10/11.
-  echo          A copy of this log is saved at: %LOG_FILE%
-  pause
-  exit /b 1
-)
+if /i not "%ARCH%"=="x64" if /i not "%ARCH%"=="arm64" ( echo. & echo   [FAIL] 32-bit Windows is not supported by this installer. Please use 64-bit ^(x64/ARM64^) Windows 10/11. & echo   A copy of this log is saved at: %LOG_FILE% & pause & exit /b 1 )
 set "NODE_URL=https://nodejs.org/dist/v22.22.2/node-v22.22.2-win-%ARCH%.zip"
 set "GIT_SUF=64-bit"
 if /i "%ARCH%"=="arm64" set "GIT_SUF=arm64"

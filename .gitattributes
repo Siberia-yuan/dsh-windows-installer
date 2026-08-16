@@ -1,13 +1,17 @@
-# Windows batch files MUST be CRLF - cmd.exe parses multi-line blocks and
-# goto labels unreliably with LF-only line endings (symptom: script exits
-# immediately with no output). This also makes GitHub's zip download
-# produce CRLF files.
-*.cmd  text eol=crlf
-*.bat  text eol=crlf
-*.ps1  text eol=crlf
-*.vbs  text eol=crlf
+# Windows batch/script files MUST be CRLF. cmd.exe parses multi-line blocks
+# and goto labels unreliably with LF-only endings (symptom: script exits
+# immediately with no output).
+#
+# We use `-text` (store as-is, no line-ending normalization) so the repo
+# blob itself is CRLF: git checkout, GitHub's zip download and raw files
+# all deliver CRLF. (`text eol=crlf` would store LF in the blob and rely on
+# checkout conversion, which GitHub's zip download does NOT apply.)
+*.cmd  -text
+*.bat  -text
+*.ps1  -text
+*.vbs  -text
 
-# everything else: LF as-is
+# everything else: normalize to LF in the blob
 *.mjs  text eol=lf
 *.cjs  text eol=lf
 *.js   text eol=lf
