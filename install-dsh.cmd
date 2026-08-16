@@ -127,6 +127,7 @@ if exist "%TARGET%" (
   if exist "%TARGET%\.git" (
     echo   [info] existing repository found - will update instead of clone.
     set "EXISTING_REPO=1"
+    call :log "install dir exists - update mode"
   ) else (
     echo   [WARN] directory exists but is not a git repo.
     set /p CONFIRM="Continue into it anyway? [y/N] "
@@ -143,18 +144,20 @@ if defined DRY ( echo   [dry-run] git clone %GH_PROXY%  ^(fallback %GH_URL%^) & 
 if defined EXISTING_REPO (
   pushd "%TARGET%"
   echo   updating existing repo (git pull --ff-only) ...
+  call :log "git pull --ff-only"
   git pull --ff-only
-  if errorlevel 1 echo   [WARN] git pull failed (probably local patch changes) - leaving existing checkout untouched.
+  if errorlevel 1 ( echo   [WARN] git pull failed (probably local patch changes) - leaving existing checkout untouched. & call :log "git pull failed - kept existing checkout" )
   popd
 ) else (
   echo   cloning via mirror %GH_PROXY% ...
+  call :log "git clone (mirror: ghfast.top)"
   git clone %GH_PROXY% "%TARGET%" 2>nul
   if errorlevel 1 (
     echo   mirror failed, retrying direct from GitHub ...
     git clone %GH_URL% "%TARGET%"
     if errorlevel 1 ( echo   [FAIL] could not clone repository (network blocked?). & goto :fail )
   )
-  if exist "%TARGET%\package.json" ( echo   [ok] source fetched. ) else ( echo   [FAIL] clone incomplete. & goto :fail )
+  if exist "%TARGET%\package.json" ( echo   [ok] source fetched. & call :log "source cloned OK" ) else ( echo   [FAIL] clone incomplete. & goto :fail )
 )
 :after_clone
 
@@ -172,12 +175,15 @@ if errorlevel 1 goto :fail
 if not defined PNPM_BIN ( echo   [FAIL] pnpm could not be located. Install Node 22 LTS and retry. & goto :fail )
 pushd "%TARGET%"
 echo   running pnpm install (a few minutes) ...
+call :log "pnpm install started"
 call "%PNPM_BIN%" install
 if errorlevel 1 (
   echo   [FAIL] pnpm install failed. Common causes: network to registry.npmmirror.com,
   echo          or a postinstall script error (see output above). Retry after fixing.
+  call :log "pnpm install FAILED"
   popd & goto :fail
 )
+call :log "pnpm install OK"
 popd
 :after_install
 
@@ -185,6 +191,7 @@ rem ----------------------------------------------------- workspace links
 call :echo_step 5 "Link workspace packages (junctions - no admin needed)"
 if defined DRY ( echo   [dry-run] create junctions for all workspace packages & goto :after_links )
 call :do_links
+call :log "workspace junctions created"
 :after_links
 
 rem ---------------------------------------------------------------- build
@@ -194,15 +201,20 @@ if defined DRY ( echo   [dry-run] tsc + tsdown via node  then  vite build ^(web^
 pushd "%TARGET%"
 echo   building libraries (tsc + tsdown, invoked via node directly -
 echo   no pnpm/npm shim involved, avoids broken shim issues) ...
+call :log "build: tsc host"
 call "%NODE_BIN%" node_modules\typescript\bin\tsc -b tsconfig.host.json
 if errorlevel 1 ( echo   [FAIL] tsc host build failed. & popd & goto :fail )
+call :log "build: tsdown host"
 call "%NODE_BIN%" node_modules\tsdown\dist\run.mjs --env.DSH_BUILD_FACE host
 if errorlevel 1 ( echo   [FAIL] tsdown host build failed. & popd & goto :fail )
+call :log "build: tsc client"
 call "%NODE_BIN%" node_modules\typescript\bin\tsc -b tsconfig.client.json
 if errorlevel 1 ( echo   [FAIL] tsc client build failed. & popd & goto :fail )
+call :log "build: tsdown client"
 call "%NODE_BIN%" node_modules\tsdown\dist\run.mjs --env.DSH_BUILD_FACE client
 if errorlevel 1 ( echo   [FAIL] tsdown client build failed. & popd & goto :fail )
 echo   [ok] libraries built.
+call :log "build: libraries OK"
 echo   building web frontend (vite) ...
 pushd apps\web
 call "%NODE_BIN%" "..\..\node_modules\vite\bin\vite.js" build
@@ -237,6 +249,7 @@ echo start "" http://127.0.0.1:3080
 echo goto :eof
 ) > "%TARGET%\start-dsh.cmd"
 echo   [ok] launcher ready (start-dsh.cmd).
+call :log "launcher generated (start-dsh.cmd)"
 :after_launcher
 
 rem ------------------------------------------------------------ shortcut
@@ -261,11 +274,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command "$d='%DESKTOP%'; $s=(New-
 if errorlevel 1 echo   [WARN] PowerShell reported an error creating the shortcut (see message above).
 if exist "%DESKTOP%\DeepSeek Harness.lnk" (
   echo   [ok] shortcut created: "%DESKTOP%\DeepSeek Harness.lnk"
+  call :log "desktop shortcut created"
 ) else (
   echo   [WARN] desktop shortcut was not created - no problem, start it like this:
   echo          open "%TARGET%"
   echo          double-click  start-dsh.cmd
   echo          browser will open http://127.0.0.1:3080
+  call :log "desktop shortcut NOT created (see messages above)"
 )
 :after_shortcut
 
@@ -475,6 +490,11 @@ rem ============================================================= node tool
   echo   [Step %~1] %~2
   echo   ------------------------------------------------------------------
   echo [%date% %time%] step %~1: %~2 >> "%LOG_FILE%"
+  exit /b 0
+
+:log
+  rem append a timestamped progress line to install.log (next to this script)
+  echo [%date% %time%] %~1 >> "%LOG_FILE%"
   exit /b 0
 
 :fail
