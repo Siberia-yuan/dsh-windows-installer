@@ -93,13 +93,6 @@ dsh-windows-installer/
 - 安装器从官方仓库 `github.com/deepseek-ai/deepseek-harness` 克隆源码
 - 安装器只做"环境准备 + 兼容补丁 + 启动便利"，补丁的每一处改动都带原因注释，可在安装目录用 `git diff` 核对
 
-## 常见问题
-
-- **clone 失败 / 网络被墙？** 安装器默认走 `ghfast.top` 镜像，失败自动回退直连
-- **`pnpm install` 失败？** 多为网络波动，重跑一次即可（安装器幂等）
-- **构建报 TS2307？** workspace junction 未建好，重跑 `node link-workspace.mjs <安装目录>`
-- **如何卸载？** 删除安装目录（和桌面快捷方式）即可，无残留
-
 ## 许可
 
 [MIT](LICENSE) —— 完全开源，自由使用、修改、分发。
