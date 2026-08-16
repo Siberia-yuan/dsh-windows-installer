@@ -1,5 +1,9 @@
 # DeepSeek Harness — Windows 一键安装器
 
+**中文** | [**English**](README.en.md)
+
+---
+
 > **完全开源**：这个安装器的每一行都是纯文本脚本（`.cmd` / `.mjs`），没有任何编译出来的东西、也没有任何隐藏内容。你可以打开任何一个文件，从头看到尾，确认它到底做了什么再运行。
 
 为 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（DeepSeek 官方开源框架）提供的一键安装脚本。
