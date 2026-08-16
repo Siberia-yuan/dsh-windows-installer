@@ -230,7 +230,10 @@ if errorlevel 1 echo   [WARN] PowerShell reported an error creating the shortcut
 if exist "%DESKTOP%\DeepSeek Harness.lnk" (
   echo   [ok] shortcut created: "%DESKTOP%\DeepSeek Harness.lnk"
 ) else (
-  echo   [WARN] shortcut file not found - install is still complete ^(run "%TARGET%\start-dsh.cmd" to launch^).
+  echo   [WARN] desktop shortcut was not created - no problem, start it like this:
+  echo          open "%TARGET%"
+  echo          double-click  start-dsh.cmd
+  echo          browser will open http://127.0.0.1:3080
 )
 :after_shortcut
 
@@ -241,7 +244,7 @@ echo   ========================================================
 echo    DeepSeek Harness installed successfully!
 echo    Install dir : %TARGET%
 echo    Web UI      : http://127.0.0.1:3080
-echo    Start it    : %TARGET%\start-dsh.cmd   ^(double-click the desktop icon^)
+echo    Start it    : %TARGET%\start-dsh.cmd   ^(or the desktop icon if present^)
 echo    Uninstall   : delete the install dir and the desktop shortcut
 echo   ========================================================
 echo.
