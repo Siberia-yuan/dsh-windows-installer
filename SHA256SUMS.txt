@@ -1,5 +1,5 @@
 # SHA256 checksums - verify with:
 #   Windows:  certutil -hashfile <file> SHA256
 #   Git Bash: sha256sum -c SHA256SUMS.txt
-457546433307f0aa720aceb4cdf4362c84eab23b181bef2505c8060d7bf847ef *install-dsh.cmd
+860c6fea3c00ed4e140da58d96c18076cc5b4f48331caf2658cffea3fa5a791d *install-dsh.cmd
 bc9292f384d17ac2e337f09d58ae9d2c099436242695f567b3ca1e38c02476c5 *dsh.ico

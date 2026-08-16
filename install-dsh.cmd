@@ -87,6 +87,8 @@ set "PNPM_BIN="
 set "NODE_DIR="
 set "GIT_BIN="
 set "TOOLS_DIR=%~dp0tools"
+set "LOG_FILE=%~dp0install.log"
+echo [%date% %time%] DeepSeek Harness installer started > "%LOG_FILE%" 2>nul
 
 call :echo_step 0 "Check and prepare prerequisites (auto-download if missing)"
 
@@ -264,7 +266,8 @@ echo    install-dsh.cmd --help               show this help
 echo.
 echo  Safety: source-visible, dry-run supported; writes only inside the
 echo  chosen install directory plus one desktop shortcut.
-goto :done
+pause
+exit /b 0
 
 rem ================================================================ patches
 :do_patch
@@ -402,7 +405,9 @@ rem ============================================================= node tool
     echo   [ok] self-contained node downloaded.
     exit /b 0
   )
-  echo   [FAIL] could not download Node.js (network?). Install Node 22 from https://nodejs.org.
+  echo   [FAIL] could not download Node.js (network?). 
+  echo          Check your internet / proxy, or install Node.js 22 LTS from
+  echo          https://nodejs.org and re-run this installer.
   exit /b 1
 
 :ensure_pnpm
@@ -424,6 +429,7 @@ rem ============================================================= node tool
   echo   ------------------------------------------------------------------
   echo   [Step %~1] %~2
   echo   ------------------------------------------------------------------
+  echo [%date% %time%] step %~1: %~2 >> "%LOG_FILE%"
   exit /b 0
 
 :fail
@@ -434,7 +440,19 @@ rem ============================================================= node tool
   echo          install did not complete. Check the messages above for the
   echo          cause (most common: network / proxy issues during clone or
   echo          pnpm install - just re-run the installer to retry).
+  echo          A copy of this log is saved at: %LOG_FILE%
+  echo [%date% %time%] [FAIL] installer aborted >> "%LOG_FILE%"
+  echo.
+  pause
   exit /b 1
 
 :done
+  echo [%date% %time%] installer finished OK >> "%LOG_FILE%"
+  echo.
+  echo   ---------------------------------------------------------
+  echo   If you see this, the install finished. You can close this
+  echo   window now. To start DeepSeek Harness later, double-click
+  echo   the desktop icon (or %TARGET%\start-dsh.cmd).
+  echo   ---------------------------------------------------------
+  pause
   exit /b 0
