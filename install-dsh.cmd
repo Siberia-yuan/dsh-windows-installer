@@ -169,9 +169,10 @@ call :echo_step 4 "Install dependencies (pnpm install)"
 if defined DRY ( echo   [dry-run] cd "%TARGET%" ^&^& pnpm install & goto :after_install )
 call :ensure_pnpm
 if errorlevel 1 goto :fail
+if not defined PNPM_BIN ( echo   [FAIL] pnpm could not be located. Install Node 22 LTS and retry. & goto :fail )
 pushd "%TARGET%"
 echo   running pnpm install (a few minutes) ...
-call %PNPM_BIN% install
+call "%PNPM_BIN%" install
 if errorlevel 1 (
   echo   [FAIL] pnpm install failed. Common causes: network to registry.npmmirror.com,
   echo          or a postinstall script error (see output above). Retry after fixing.
@@ -189,11 +190,19 @@ call :do_links
 rem ---------------------------------------------------------------- build
 if defined SKIP_BUILD ( call :echo_step 6 "Build (skipped via --skip-build)" & goto :after_build )
 call :echo_step 6 "Build the project"
-if defined DRY ( echo   [dry-run] pnpm run build:lib   then   vite build ^(web^) & goto :after_build )
+if defined DRY ( echo   [dry-run] tsc + tsdown via node  then  vite build ^(web^) & goto :after_build )
 pushd "%TARGET%"
-echo   building libraries (tsc + tsdown) ...
-call %PNPM_BIN% run build:lib
-if errorlevel 1 ( echo   [FAIL] library build failed. & popd & goto :fail )
+echo   building libraries (tsc + tsdown, invoked via node directly -
+echo   no pnpm/npm shim involved, avoids broken shim issues) ...
+call "%NODE_BIN%" node_modules\typescript\bin\tsc -b tsconfig.host.json
+if errorlevel 1 ( echo   [FAIL] tsc host build failed. & popd & goto :fail )
+call "%NODE_BIN%" node_modules\tsdown\dist\run.mjs --env.DSH_BUILD_FACE host
+if errorlevel 1 ( echo   [FAIL] tsdown host build failed. & popd & goto :fail )
+call "%NODE_BIN%" node_modules\typescript\bin\tsc -b tsconfig.client.json
+if errorlevel 1 ( echo   [FAIL] tsc client build failed. & popd & goto :fail )
+call "%NODE_BIN%" node_modules\tsdown\dist\run.mjs --env.DSH_BUILD_FACE client
+if errorlevel 1 ( echo   [FAIL] tsdown client build failed. & popd & goto :fail )
+echo   [ok] libraries built.
 echo   building web frontend (vite) ...
 pushd apps\web
 call "%NODE_BIN%" "..\..\node_modules\vite\bin\vite.js" build
