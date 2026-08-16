@@ -309,21 +309,7 @@ rem ================================================================ patches
   rem      subprocess-local=false: skip macOS-only postinstall
   rem      postinstall no-op (root + subprocess-local): lefthook / spawn-helper
   rem      are not needed on Windows and abort the install when they fail
-  powershell -NoProfile -ExecutionPolicy Bypass -Command "$t='%TARGET%'; ^
-$ws=Join-Path $t 'pnpm-workspace.yaml'; ^
-if(Test-Path $ws){ $c=[IO.File]::ReadAllText($ws); ^
-  if(-not $c.Contains('nodeLinker: hoisted')){ $c='# Workaround (Windows): isolated linker fails to link top-level deps.'+[Environment]::NewLine+'nodeLinker: hoisted'+[Environment]::NewLine+[Environment]::NewLine+$c }; ^
-  if(-not $c.Contains('verifyDepsBeforeRun: false')){ $c='# Workaround (Windows): do not auto re-install before pnpm run (keeps junctions).'+[Environment]::NewLine+'verifyDepsBeforeRun: false'+[Environment]::NewLine+[Environment]::NewLine+$c }; ^
-  $c=$c -replace 'koffi:\s*true','koffi: false'; ^
-  $c=$c -replace '(''@deepseek-ai/dsh-subprocess-local''[^'']*'':\s*)true','$1false'; ^
-  [IO.File]::WriteAllText($ws,$c); ^
-  Write-Output '  [ok] pnpm-workspace.yaml: hoisted + verifyDepsBeforeRun + koffi/subprocess-local build off' } ^
-foreach($p in @((Join-Path $t 'package.json'),(Join-Path $t 'packages\subprocess\subprocess-local\package.json'))){ ^
-  if(Test-Path $p){ try{ $o=Get-Content $p -Raw | ConvertFrom-Json }catch{ Write-Output ('  [WARN] skip invalid JSON: '+$p); continue }; ^
-    if($o.scripts.postinstall){ $q=[char]34; $o.scripts.postinstall='node -e '+$q+'process.exit(0)'+$q; ^
-      $json=$o | ConvertTo-Json -Depth 20; ^
-      [IO.File]::WriteAllText($p,$json,(New-Object System.Text.UTF8Encoding($false))); ^
-      Write-Output ('  [ok] '+$p+' : postinstall set to no-op') } } }"
+  powershell -NoProfile -ExecutionPolicy Bypass -Command "$t='%TARGET%'; $ws=Join-Path $t 'pnpm-workspace.yaml'; if(Test-Path $ws){ $c=[IO.File]::ReadAllText($ws); if(-not $c.Contains('nodeLinker: hoisted')){ $c='# Workaround (Windows): isolated linker fails to link top-level deps.'+[Environment]::NewLine+'nodeLinker: hoisted'+[Environment]::NewLine+[Environment]::NewLine+$c }; if(-not $c.Contains('verifyDepsBeforeRun: false')){ $c='# Workaround (Windows): do not auto re-install before pnpm run (keeps junctions).'+[Environment]::NewLine+'verifyDepsBeforeRun: false'+[Environment]::NewLine+[Environment]::NewLine+$c }; $c=$c -replace 'koffi:\s*true','koffi: false'; $c=$c -replace '(''@deepseek-ai/dsh-subprocess-local''[^'']*'':\s*)true','$1false'; [IO.File]::WriteAllText($ws,$c); Write-Output '  [ok] pnpm-workspace.yaml patched' }; foreach($p in @((Join-Path $t 'package.json'),(Join-Path $t 'packages\subprocess\subprocess-local\package.json'))){ if(Test-Path $p){ try{ $o=Get-Content $p -Raw | ConvertFrom-Json }catch{ Write-Output ('  [WARN] skip invalid JSON: '+$p); continue }; if($o.scripts.postinstall){ $q=[char]34; $o.scripts.postinstall='node -e '+$q+'process.exit(0)'+$q; $json=$o | ConvertTo-Json -Depth 20; [IO.File]::WriteAllText($p,$json,(New-Object System.Text.UTF8Encoding($false))); Write-Output ('  [ok] '+$p+' : postinstall no-op') } } }"
   exit /b 0
 
 rem ============================================================== junctions
@@ -331,20 +317,7 @@ rem ============================================================== junctions
   rem Scan vendor/packages/apps/website/examples/python for workspace packages
   rem and create a directory junction node_modules\<name> for each. Junctions
   rem do not need admin rights (real symlinks do). Re-run is safe (idempotent).
-  powershell -NoProfile -ExecutionPolicy Bypass -Command "$t='%TARGET%'; ^
-$nm=Join-Path $t 'node_modules'; ^
-$dirs=New-Object System.Collections.ArrayList; ^
-function Add-Pkg($p){ if(Test-Path (Join-Path $p 'package.json')){ [void]$dirs.Add($p) } }; ^
-foreach($base in @('vendor','apps')){ $b=Join-Path $t $base; if(Test-Path $b){ Get-ChildItem $b -Directory | ForEach-Object { Add-Pkg $_.FullName } } }; ^
-$pk=Join-Path $t 'packages'; if(Test-Path $pk){ Get-ChildItem $pk -Directory | ForEach-Object { Get-ChildItem $_.FullName -Directory | ForEach-Object { Add-Pkg $_.FullName } } }; ^
-Add-Pkg (Join-Path $t 'website'); Add-Pkg (Join-Path $t 'examples'); Add-Pkg (Join-Path $t 'python\sdk-runtime'); ^
-$lr=Join-Path $t 'native\landlock-run'; if(Test-Path $lr){ Add-Pkg $lr; $lrp=Join-Path $lr 'packages'; if(Test-Path $lrp){ Get-ChildItem $lrp -Directory | ForEach-Object { Add-Pkg $_.FullName } } }; ^
-$created=0;$skipped=0;$errored=0; ^
-foreach($d in $dirs){ try{ $n=(Get-Content (Join-Path $d 'package.json') -Raw | ConvertFrom-Json).name }catch{ continue }; if(-not $n){ continue }; ^
-  $l=Join-Path $nm $n; if(Test-Path $l){ $skipped++; continue }; ^
-  $parent=Split-Path $l -Parent; if(-not (Test-Path $parent)){ New-Item -ItemType Directory -Path $parent -Force | Out-Null }; ^
-  try{ New-Item -ItemType Junction -Path $l -Target $d -Force | Out-Null; $created++ }catch{ $errored++; Write-Output ('  ERR '+$n) } }; ^
-Write-Output ('  workspace junctions: created='+$created+' skipped='+$skipped+' errored='+$errored)"
+  powershell -NoProfile -ExecutionPolicy Bypass -Command "$t='%TARGET%'; $nm=Join-Path $t 'node_modules'; $dirs=New-Object System.Collections.ArrayList; function Add-Pkg($p){ if(Test-Path (Join-Path $p 'package.json')){ [void]$dirs.Add($p) } }; foreach($base in @('vendor','apps')){ $b=Join-Path $t $base; if(Test-Path $b){ Get-ChildItem $b -Directory | ForEach-Object { Add-Pkg $_.FullName } } }; $pk=Join-Path $t 'packages'; if(Test-Path $pk){ Get-ChildItem $pk -Directory | ForEach-Object { Get-ChildItem $_.FullName -Directory | ForEach-Object { Add-Pkg $_.FullName } } }; Add-Pkg (Join-Path $t 'website'); Add-Pkg (Join-Path $t 'examples'); Add-Pkg (Join-Path $t 'python\sdk-runtime'); $lr=Join-Path $t 'native\landlock-run'; if(Test-Path $lr){ Add-Pkg $lr; $lrp=Join-Path $lr 'packages'; if(Test-Path $lrp){ Get-ChildItem $lrp -Directory | ForEach-Object { Add-Pkg $_.FullName } } }; $created=0;$skipped=0;$errored=0; foreach($d in $dirs){ try{ $n=(Get-Content (Join-Path $d 'package.json') -Raw | ConvertFrom-Json).name }catch{ continue }; if(-not $n){ continue }; $l=Join-Path $nm $n; if(Test-Path $l){ $skipped++; continue }; $parent=Split-Path $l -Parent; if(-not (Test-Path $parent)){ New-Item -ItemType Directory -Path $parent -Force | Out-Null }; try{ New-Item -ItemType Junction -Path $l -Target $d -Force | Out-Null; $created++ }catch{ $errored++; Write-Output ('  ERR '+$n) } }; Write-Output ('  workspace junctions: created='+$created+' skipped='+$skipped+' errored='+$errored)"
   exit /b 0
 
 rem ============================================================== git tool
