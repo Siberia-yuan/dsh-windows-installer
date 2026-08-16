@@ -120,8 +120,8 @@ if defined DRY ( echo   [dry-run] git clone %GH_PROXY%  ^(fallback %GH_URL%^) & 
 if defined EXISTING_REPO (
   pushd "%TARGET%"
   echo   updating existing repo (git pull --ff-only) ...
-  git pull --ff-only 2>nul
-  if errorlevel 1 echo   [WARN] git pull failed - leaving existing checkout untouched.
+  git pull --ff-only
+  if errorlevel 1 echo   [WARN] git pull failed (probably local patch changes) - leaving existing checkout untouched.
   popd
 ) else (
   echo   cloning via mirror %GH_PROXY% ...
@@ -290,7 +290,7 @@ if(Test-Path $ws){ $c=[IO.File]::ReadAllText($ws); ^
   [IO.File]::WriteAllText($ws,$c); ^
   Write-Output '  [ok] pnpm-workspace.yaml: hoisted + verifyDepsBeforeRun + koffi/subprocess-local build off' } ^
 foreach($p in @((Join-Path $t 'package.json'),(Join-Path $t 'packages\subprocess\subprocess-local\package.json'))){ ^
-  if(Test-Path $p){ $o=Get-Content $p -Raw | ConvertFrom-Json; ^
+  if(Test-Path $p){ try{ $o=Get-Content $p -Raw | ConvertFrom-Json }catch{ Write-Output ('  [WARN] skip invalid JSON: '+$p); continue }; ^
     if($o.scripts.postinstall){ $q=[char]34; $o.scripts.postinstall='node -e '+$q+'process.exit(0)'+$q; ^
       $json=$o | ConvertTo-Json -Depth 20; ^
       [IO.File]::WriteAllText($p,$json,(New-Object System.Text.UTF8Encoding($false))); ^
