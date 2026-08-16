@@ -1,13 +1,5 @@
 # DeepSeek Harness — Windows 一键安装器（纯脚本版）
 
-> ### ⚠️ 重要：这是**脚本**，不是可执行程序
->
-> 本项目的所有内容都是**普通文本文件**（`.cmd` / `.mjs` / `.py` / `.md` / `.html`），
-> **没有任何编译过的可执行文件（.exe）**。你可以用记事本打开每一个文件、逐行阅读、
-> 审计它到底做了什么。**完全开源，欢迎检查，先看后装。**
-
----
-
 ## 这是什么
 
 为 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness)（`dsh`，DeepSeek 官方开源的 agent harness 框架）
