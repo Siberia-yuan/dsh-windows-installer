@@ -380,12 +380,14 @@ rem ============================================================== git tool
   if exist "%LOCAL_GIT%\cmd\git.exe" (
     set "GIT_BIN=%LOCAL_GIT%\cmd"
     set "PATH=%LOCAL_GIT%\cmd;!PATH!"
-    echo   [ok] using bundled PortableGit.
+    echo   [ok] using bundled PortableGit - already downloaded, no download needed.
     exit /b 0
   )
   echo   [info] git not found - downloading bundled PortableGit (~59 MB) ...
   echo          source: git-for-windows official release (via ghfast.top mirror)
   echo          this download is one-time; the extracted copy stays in tools\git
+  echo          note: keep this script and the tools\ folder together, otherwise
+  echo          the downloaded copy is lost and it will download again.
   echo [%date% %time%] downloading bundled PortableGit (~59 MB) >> "%LOG_FILE%"
   if not exist "%TOOLS_DIR%" mkdir "%TOOLS_DIR%"
   powershell -NoProfile -ExecutionPolicy Bypass -Command "$ProgressPreference='SilentlyContinue'; $ErrorActionPreference='Stop'; $u='%GIT_URL%'; Invoke-WebRequest $u -OutFile '%GIT_SFX%'" >nul 2>nul
@@ -431,12 +433,14 @@ rem ============================================================= node tool
   if exist "%LOCAL_NODE%\node.exe" (
     set "NODE_BIN=%LOCAL_NODE%\node.exe"
     set "PATH=%LOCAL_NODE%;!PATH!"
-    echo   [ok] using bundled node.
+    echo   [ok] using bundled node - already downloaded, no download needed.
     exit /b 0
   )
   echo   [info] downloading Node.js 22 runtime + deps (npm/corepack/pnpm, ~35 MB) ...
-  echo          source: nodejs.org official (node-v22.22.2-win-x64.zip)
+  echo          source: nodejs.org official (node-v22.22.2-win-%ARCH%.zip)
   echo          this download is one-time; the extracted copy stays in tools\
+  echo          note: keep this script and the tools\ folder together, otherwise
+  echo          the downloaded copy is lost and it will download again.
   echo [%date% %time%] downloading Node.js 22 runtime + deps (~35 MB) >> "%LOG_FILE%"
   if not exist "%TOOLS_DIR%" mkdir "%TOOLS_DIR%"
   powershell -NoProfile -ExecutionPolicy Bypass -Command "$ProgressPreference='SilentlyContinue'; $ErrorActionPreference='Stop'; $u='%NODE_URL%'; $z='%TOOLS_DIR%\node.zip'; Invoke-WebRequest $u -OutFile $z; Expand-Archive -Force $z '%TOOLS_DIR%'; Remove-Item $z" >nul 2>nul
