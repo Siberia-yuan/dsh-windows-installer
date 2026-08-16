@@ -272,13 +272,18 @@ if exist "%DESKTOP%\DeepSeek Harness.lnk" (
 rem -------------------------------------------------------------- summary
 call :echo_step 9 "Summary"
 echo.
-echo   ========================================================
-echo    DeepSeek Harness installed successfully!
+echo   ============================================================
+if defined DRY (
+  echo   [DRY-RUN PREVIEW COMPLETE - nothing was changed]
+) else (
+  echo   ** INSTALL SUCCESS - DeepSeek Harness is ready to use! **
+)
+echo   ============================================================
 echo    Install dir : %TARGET%
 echo    Web UI      : http://127.0.0.1:3080
 echo    Start it    : %TARGET%\start-dsh.cmd   ^(or the desktop icon if present^)
 echo    Uninstall   : delete the install dir and the desktop shortcut
-echo   ========================================================
+echo   ============================================================
 echo.
 if defined DRY echo   [dry-run] preview finished. No changes were made.
 goto :done
