@@ -350,7 +350,7 @@ rem ============================================================== git tool
   )
   echo   [info] git not found - downloading self-contained PortableGit (~59 MB) ...
   if not exist "%TOOLS_DIR%" mkdir "%TOOLS_DIR%"
-  powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $u='%GIT_URL%'; Invoke-WebRequest $u -OutFile '%GIT_SFX%'" >nul 2>nul
+  powershell -NoProfile -ExecutionPolicy Bypass -Command "$ProgressPreference='SilentlyContinue'; $ErrorActionPreference='Stop'; $u='%GIT_URL%'; Invoke-WebRequest $u -OutFile '%GIT_SFX%'" >nul 2>nul
   if not exist "%GIT_SFX%" ( echo   [FAIL] could not download PortableGit (network?). & exit /b 1 )
   echo   extracting PortableGit ...
   "%GIT_SFX%" -y -o"%LOCAL_GIT%" >nul 2>nul
@@ -398,7 +398,7 @@ rem ============================================================= node tool
   )
   echo   [info] downloading self-contained Node.js 22 (~35 MB) into "%TOOLS_DIR%" ...
   if not exist "%TOOLS_DIR%" mkdir "%TOOLS_DIR%"
-  powershell -NoProfile -ExecutionPolicy Bypass -Command "$ErrorActionPreference='Stop'; $u='%NODE_URL%'; $z='%TOOLS_DIR%\node.zip'; Invoke-WebRequest $u -OutFile $z; Expand-Archive -Force $z '%TOOLS_DIR%'; Remove-Item $z" >nul 2>nul
+  powershell -NoProfile -ExecutionPolicy Bypass -Command "$ProgressPreference='SilentlyContinue'; $ErrorActionPreference='Stop'; $u='%NODE_URL%'; $z='%TOOLS_DIR%\node.zip'; Invoke-WebRequest $u -OutFile $z; Expand-Archive -Force $z '%TOOLS_DIR%'; Remove-Item $z" >nul 2>nul
   if exist "%LOCAL_NODE%\node.exe" (
     set "NODE_BIN=%LOCAL_NODE%\node.exe"
     set "PATH=%LOCAL_NODE%;!PATH!"
