@@ -46,10 +46,10 @@ rem    install-dsh.cmd --help              show this help
 rem ============================================================================
 
 rem ------------------------------------------------------------------ config
+rem GIT_URL / NODE_URL are set per CPU architecture in the helpers section
+rem below (x64 -> 64-bit builds, ARM64 -> arm64 builds).
 set "GH_URL=https://github.com/deepseek-ai/deepseek-harness.git"
 set "GH_PROXY=https://ghfast.top/https://github.com/deepseek-ai/deepseek-harness.git"
-set "GIT_URL=https://ghfast.top/https://github.com/git-for-windows/git/releases/download/v2.55.0.windows.4/PortableGit-2.55.0.4-64-bit.7z.exe"
-set "NODE_URL=https://nodejs.org/dist/v22.22.2/node-v22.22.2-win-x64.zip"
 set "NPM_REG=registry=https://registry.npmmirror.com"
 
 set "SCRIPT_DIR=%~dp0"
@@ -82,13 +82,34 @@ if defined DRY echo   [MODE] DRY-RUN - showing what WOULD happen. Nothing is exe
 if defined DRY echo.
 
 rem ------------------------------------------------------------------ helpers
+set "TOOLS_DIR=%~dp0tools"
+set "LOG_FILE=%~dp0install.log"
+echo [%date% %time%] DeepSeek Harness installer started > "%LOG_FILE%" 2>nul
+
+rem ---- detect CPU architecture and pick matching tool builds ----
+set "ARCH=x64"
+if /i "%PROCESSOR_ARCHITECTURE%"=="x86" if defined PROCESSOR_ARCHITEW6432 set "PROCESSOR_ARCHITECTURE=%PROCESSOR_ARCHITEW6432%"
+if /i "%PROCESSOR_ARCHITECTURE%"=="AMD64" set "ARCH=x64"
+if /i "%PROCESSOR_ARCHITECTURE%"=="ARM64" set "ARCH=arm64"
+if /i not "%ARCH%"=="x64" if /i not "%ARCH%"=="arm64" (
+  echo.
+  echo   [FAIL] 32-bit Windows is not supported by this installer.
+  echo          Please use 64-bit (x64 / ARM64) Windows 10/11.
+  echo          A copy of this log is saved at: %LOG_FILE%
+  pause
+  exit /b 1
+)
+set "NODE_URL=https://nodejs.org/dist/v22.22.2/node-v22.22.2-win-%ARCH%.zip"
+set "GIT_SUF=64-bit"
+if /i "%ARCH%"=="arm64" set "GIT_SUF=arm64"
+set "GIT_URL=https://ghfast.top/https://github.com/git-for-windows/git/releases/download/v2.55.0.windows.4/PortableGit-2.55.0.4-%GIT_SUF%.7z.exe"
+echo   [info] CPU architecture: %PROCESSOR_ARCHITECTURE% (using %ARCH% tool builds)
+echo [%date% %time%] arch=%ARCH% >> "%LOG_FILE%"
+
 set "NODE_BIN="
 set "PNPM_BIN="
 set "NODE_DIR="
 set "GIT_BIN="
-set "TOOLS_DIR=%~dp0tools"
-set "LOG_FILE=%~dp0install.log"
-echo [%date% %time%] DeepSeek Harness installer started > "%LOG_FILE%" 2>nul
 
 call :echo_step 0 "Check and prepare prerequisites (auto-download if missing)"
 
@@ -392,7 +413,7 @@ rem ============================================================= node tool
   goto :download_node
 
 :download_node
-  set "LOCAL_NODE=%TOOLS_DIR%\node-v22.22.2-win-x64"
+  set "LOCAL_NODE=%TOOLS_DIR%\node-v22.22.2-win-%ARCH%"
   if exist "%LOCAL_NODE%\node.exe" (
     set "NODE_BIN=%LOCAL_NODE%\node.exe"
     set "PATH=%LOCAL_NODE%;!PATH!"
